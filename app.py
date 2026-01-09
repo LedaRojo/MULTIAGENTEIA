@@ -1,4 +1,5 @@
 #RAG para ciberseguridad
+#se ejecuta en huggingface el sistema pero el despliegue en github
 import os
 import gradio as gr
 from langchain_chroma import Chroma
