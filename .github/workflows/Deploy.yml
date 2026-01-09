@@ -1,0 +1,55 @@
+name: Deploy to Hugging Face
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app.py'
+      - 'requirements.txt'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout GitHub Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions Bot"
+      
+      - name: Clone Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git clone https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/RAG_OpenAI_Python hf-space
+      
+      - name: Copy files to HF Space
+        run: |
+          cp app.py hf-space/
+          cp requirements.txt hf-space/
+      
+      - name: Commit and Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd hf-space
+          git add app.py requirements.txt
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-deploy from GitHub: $(date '+%Y-%m-%d %H:%M:%S')"
+            git push https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/RAG_OpenAI_Python main
+            echo "✅ Successfully deployed to Hugging Face!"
+          fi
+
+    
+
+      

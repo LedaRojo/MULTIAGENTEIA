@@ -1,0 +1,14 @@
+gradio==4.44.0
+openai
+langchain
+langchain-community
+langchain-openai
+langchain-chroma
+chromadb
+tiktoken
+python-dotenv
+unstructured
+unstructured[docx]
+unstructured[pdf]
+huggingface_hub
+python-multipart
