@@ -27,7 +27,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/RAG_OpenAI_Python hf-space
+          git clone https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/SEGURIDADRAG hf-space
       
       - name: Copy files to HF Space
         run: |
@@ -46,7 +46,7 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Auto-deploy from GitHub: $(date '+%Y-%m-%d %H:%M:%S')"
-            git push https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/RAG_OpenAI_Python main
+            git push https://LedaRojo:${HF_TOKEN}@huggingface.co/spaces/LedaRojo/SEGURIDADRAG main
             echo "✅ Successfully deployed to Hugging Face!"
           fi
 
