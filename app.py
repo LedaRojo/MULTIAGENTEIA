@@ -22,7 +22,7 @@ import tempfile
 # Configuración
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY no encontrada en variables de entorno")
+   raise ValueError("OPENAI_API_KEY no encontrada en variables de entorno")
 
 # Inicializar componentes (se cargarán después de subir archivos)
 vectorstore = None
@@ -37,7 +37,8 @@ def initialize_rag_system(files):
         # Cargar documentos
         docs_list = []
         for file_info in files:
-            file_path = file_info.name
+            #file_path = file_info.name
+            file_path = file_info if isinstance(file_info, str) else file_info.name
             loader = UnstructuredFileLoader(file_path)
             documents = loader.load()
             docs_list.extend(documents)
@@ -156,7 +157,7 @@ with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
             chatbot = gr.Chatbot(
                 label="Conversación",
                 height=500,
-                show_copy_button=True
+                #show_copy_button=True
             )
             question_input = gr.Textbox(
                 label="Escribe tu pregunta",
