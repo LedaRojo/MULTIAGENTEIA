@@ -5,6 +5,8 @@
 import os
 import gradio as gr
 
+print("GRADIO VERSION:", gr.__version__)
+
 from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -12,49 +14,28 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_text_splitters import CharacterTextSplitter
-
 import tiktoken
 
-
-# =========================
 # Configuración
-# =========================
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
-    # En HF preferimos fallar explícito, pero si querés que la UI se muestre igual,
-    # reemplazá esto por un warning en init_status.
-    raise ValueError("OPENAI_API_KEY no encontrada en variables de entorno (Hugging Face Secrets).")
-
-
-# =========================
-# Estado global del RAG
-# =========================
+    raise ValueError("OPENAI_API_KEY no encontrada en variables de entorno")
 
 vectorstore = None
 retriever = None
 chain = None
 
 
-# =========================
-# Funciones principales
-# =========================
-
 def initialize_rag_system(files):
-    """Inicializa el sistema RAG con los archivos subidos."""
     global vectorstore, retriever, chain
 
-    # Gradio puede pasar None si no hay archivos
     if files is None or len(files) == 0:
         return "⚠️ No se detectaron archivos. Subí al menos un documento antes de inicializar."
 
     try:
-        # Cargar documentos
         docs_list = []
         for file_info in files:
-            # type="filepath" -> normalmente viene como string (ruta)
             file_path = file_info if isinstance(file_info, str) else getattr(file_info, "name", None)
-
             if not file_path:
                 continue
 
@@ -65,15 +46,13 @@ def initialize_rag_system(files):
         if not docs_list:
             return "⚠️ Se subieron archivos, pero no pude extraer texto. Probá con PDF no escaneado o .txt."
 
-        # Split de documentos
-        _ = tiktoken.encoding_for_model("gpt-3.5-turbo")  # solo para asegurar encoder disponible
+        _ = tiktoken.encoding_for_model("gpt-3.5-turbo")
         text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
             chunk_size=1000,
             chunk_overlap=200
         )
         doc_splits = text_splitter.split_documents(docs_list)
 
-        # Crear embeddings y vector store
         embedding_model = OpenAIEmbeddings(
             model="text-embedding-ada-002",
             api_key=OPENAI_API_KEY
@@ -90,7 +69,6 @@ def initialize_rag_system(files):
             search_kwargs={"k": 3}
         )
 
-        # Prompt
         template = """Eres un asistente útil que responde preguntas basándose ÚNICAMENTE en el contexto proporcionado.
 
 Contexto:
@@ -108,14 +86,12 @@ Respuesta:"""
 
         prompt = ChatPromptTemplate.from_template(template)
 
-        # Modelo
         model = ChatOpenAI(
             api_key=OPENAI_API_KEY,
             temperature=0,
             model="gpt-4o-mini"
         )
 
-        # Chain
         chain = (
             {"context": retriever, "question": RunnablePassthrough()}
             | prompt
@@ -130,36 +106,31 @@ Respuesta:"""
 
 
 def ask_question(question, history):
-    """Hace preguntas al sistema RAG (historial clásico: lista de tuplas)."""
-    # En algunas versiones/history puede venir None
+    """History en formato messages: [{'role':..., 'content':...}, ...]"""
     history = history or []
 
     if chain is None:
-        history.append((question or "", "⚠️ Primero debes subir archivos e inicializar el sistema."))
+        history.append({"role": "assistant", "content": "⚠️ Primero debes subir archivos e inicializar el sistema."})
         return "", history
 
     if not question or not question.strip():
-        history.append(("", "❌ Por favor ingresa una pregunta."))
+        history.append({"role": "assistant", "content": "❌ Por favor ingresa una pregunta."})
         return "", history
 
     try:
+        history.append({"role": "user", "content": question})
         respuesta = chain.invoke(question)
-        history.append((question, respuesta))
+        history.append({"role": "assistant", "content": respuesta})
         return "", history
 
     except Exception as e:
-        history.append((question, f"❌ Error procesando la pregunta: {str(e)}"))
+        history.append({"role": "assistant", "content": f"❌ Error procesando la pregunta: {str(e)}"})
         return "", history
 
 
 def clear_chat():
-    """Limpia el historial del chat."""
     return []
 
-
-# =========================
-# Interfaz Gradio
-# =========================
 
 with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
     gr.Markdown(
@@ -183,10 +154,7 @@ with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
 
         with gr.Column(scale=2):
             gr.Markdown("### 💬 Consulta la información que necesitas")
-            chatbot = gr.Chatbot(
-                label="Conversación",
-                height=500
-            )
+            chatbot = gr.Chatbot(label="Conversación", height=500)
             question_input = gr.Textbox(
                 label="Escribe tu pregunta",
                 placeholder="¿Qué información buscas en los documentos?",
@@ -197,7 +165,6 @@ with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
                 submit_btn = gr.Button("📤 Enviar Pregunta", variant="primary")
                 clear_btn = gr.Button("🗑️ Limpiar Chat", variant="secondary")
 
-    # Eventos
     init_button.click(
         fn=initialize_rag_system,
         inputs=[file_input],
@@ -228,11 +195,6 @@ with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
         - 📄 PDF
         - 📝 Word (.docx, .doc)
         - 📋 Texto (.txt)
-
-        ### 💡 Ejemplos de preguntas:
-        - "¿Cuál es el resumen del documento?"
-        - "¿Qué se menciona sobre [tema específico]?"
-        - "Lista los puntos principales"
         """
     )
 
