@@ -5,7 +5,9 @@ import gradio as gr
 from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain.embeddings import OpenAIEmbeddings
+#una corrección por ruptura de dependencia (breaking change upstream)
+#from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_core.prompts import ChatPromptTemplate
