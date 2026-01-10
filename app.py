@@ -139,7 +139,6 @@ with gr.Blocks(title="Sistema RAG - Asistente de Documentos") as demo:
         **Carga tus documentos y haz preguntas sobre su contenido**
         """
     )
-    demo.launch(theme=gr.themes.Soft())
     with gr.Row():
         with gr.Column(scale=1):
             gr.Markdown("### 📁 Configuración")
