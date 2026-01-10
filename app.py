@@ -28,11 +28,13 @@ if not OPENAI_API_KEY:
 vectorstore = None
 retriever = None
 chain = None
-
 def initialize_rag_system(files):
-    """Inicializa el sistema RAG con los archivos subidos"""
     global vectorstore, retriever, chain
-    
+
+    # ✅ Gradio puede pasar None si no hay archivos
+    if files is None or len(files) == 0:
+        return "⚠️ No se detectaron archivos. Subí al menos un documento antes de inicializar."
+
     try:
         # Cargar documentos
         docs_list = []
@@ -42,7 +44,11 @@ def initialize_rag_system(files):
             loader = UnstructuredFileLoader(file_path)
             documents = loader.load()
             docs_list.extend(documents)
-        
+
+        if not docs_list:
+            return "⚠️ Se subieron archivos, pero no pude extraer texto. Probá con PDF no escaneado o .txt."
+
+      
         # Split de documentos
         encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
         text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
