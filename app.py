@@ -31,9 +31,7 @@ chain = None
 def initialize_rag_system(files):
     global vectorstore, retriever, chain
 
-    # ✅ Gradio puede pasar None si no hay archivos
-    if files is None or len(files) == 0:
-        return "⚠️ No se detectaron archivos. Subí al menos un documento antes de inicializar."
+    # ✅ Gradio puede pasar None si no hay archivo
 
     try:
         # Cargar documentos
@@ -45,9 +43,7 @@ def initialize_rag_system(files):
             documents = loader.load()
             docs_list.extend(documents)
 
-        if not docs_list:
-            return "⚠️ Se subieron archivos, pero no pude extraer texto. Probá con PDF no escaneado o .txt."
-
+    
       
         # Split de documentos
         encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
